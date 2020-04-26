@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="style/style.css">
+
+    <style type="text/css" media="print">
+        .noprint {
+            display: none
+        }
+        
+        .print {
+            display: block !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <header class="el-header noprint">
+            <div class="icon-btns">
+                <i class="icon-list" @click="changeLeftMenu"></i>
+                <i class="icon-skip_previous" v-bind:class="{'disabled': currentPage == 1}" @click="changeCurrentPage('first')"></i>
+                <i class="icon-play_arrow prev-icon" v-bind:class="{'disabled': currentPage == 1}" @click="changeCurrentPage('prev')"></i>
+                <i class="icon-play_arrow" v-bind:class="{'disabled': currentPage == pageNum}" @click="changeCurrentPage('next')"></i>
+                <i class="icon-skip_next" v-bind:class="{'disabled': currentPage == pageNum}" @click="changeCurrentPage('last')"></i>
+                <select v-model="currentPage">
+                    <option v-for="page in pageNum" v-bind:value="page">page {{ page }}</option>
+                </select>
+                <i class="icon-zoom_in" v-bind:class="{'disabled': zoomNum == 2}" @click="modifyZoom('in')"></i>
+                <select v-model="zoomNum">
+                    <option value="0.5">50%</option>
+                    <option value="0.6">60%</option>
+                    <option value="0.7">70%</option>
+                    <option value="0.8">80%</option>
+                    <option value="0.9">90%</option>
+                    <option value="1.0" selected>100%</option>
+                    <option value="1.1">110%</option>
+                    <option value="1.2">120%</option>
+                    <option value="1.3">130%</option>
+                    <option value="1.4">140%</option>
+                    <option value="1.5">150%</option>
+                    <option value="1.6">160%</option>
+                    <option value="1.7">170%</option>
+                    <option value="1.8">180%</option>
+                    <option value="1.9">190%</option>
+                    <option value="2.0">200%</option>
+                </select>
+                <i class="icon-zoom_out" v-bind:class="{'disabled': zoomNum == 0.5}" @click="modifyZoom('out')"></i>
+                <i class="icon-format_align_left" @click="textAlign = 'left'"></i>
+                <i class="icon-format_align_center" @click="textAlign = 'center'"></i>
+                <i class="icon-format_align_right" @click="textAlign = 'right'"></i>
+                <i class="icon-print" @click="window.print()"></i>
+            </div>
+        </header>
+
+        <aside class="noprint" width="240px" v-show="ifMenuShow">
+            <nav class="tabNav">
+                <ul>
+                    <li v-bind:class="{ 'curr': currentNav == 0 }" @click="currentNav = 0">Page</li>
+                    <li v-bind:class="{ 'curr': currentNav == 1 }" @click="currentNav = 1">Bookmark</li>
+                </ul>
+
+                <div class="clear"></div>
+            </nav>
+
+            <div class="tab-conent scrollbar" v-bind:style="{ height: asideHeight + 'px' }">
+
+            <section v-show="currentNav == 0">
+                <ul class="page-menu">
+                    <li v-for="page in pageNum" v-bind:class="{ 'curr': currentPage == page }" @click="changePage(page)"><i class="icon-file-text2"></i> page {{ page }}</li>
+                </ul>
+            </section>
+
+            <section v-show="currentNav == 1">
+                <ul class="page-menu">
+                    <li v-for="page in pageNum" v-bind:class="{ 'curr': currentPage == page }" @click="changePage(page)"><i class="icon-turned_in_not"></i> Bookmark {{ page }}</li>
+                </ul>
+            </section>
+        </div>
+
+        </aside>
+        <div class="main scrollbar noprint"  v-bind:style="{ height: mainHeight + 'px' }" v-bind:class="{ 'mainLeftM': ifMenuShow, 'aleft': textAlign === 'left','acenter': textAlign === 'center','aright': textAlign === 'right'}">
+            <div class="conent" v-html="pageContent" v-bind:style="zoomStyle"></div>
+
+            <div class="clear"></div>
+        </div>
+
+        <!--专门只为打印的内容-->
+        <div class="conent print" style="display:none" v-html="pageContent"></div>
+    </div>
+</body>
+<!-- 先引入 Vue -->
+<script src="js/vue.min.js"></script>
+<script>
+
+var app = new Vue({
+        el: '#app',
+        data: function() {
+            return {
+                // visible: false,
+                isCollapse: false,
+                currentNav: 0,
+                activeName2: 'first',
+                pageNum: 1, 
+                currentPage: 1,
+                pageContent: '',
+                asideHeight: 300,
+                mainHeight: 300,
+                ifMenuShow: true,
+                zoomNum: '1.0',
+                textAlign: 'left',
+                zoomStyle: {},
+                pageDatas: ['<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="7574.000000" width="1867.000000" src ="bgimg/bg00001.jpg"/></nobr></div><p><span style="font-family:Helvetica;font-size:20.000000px;font-weight:bold;color:#FFFFFF;"><span style="position:absolute;top:713.333313px;left:1461.386719px"><nobr><a href="https://wordpress.com" target="_blank">DO </a><a href="https://wordpress.com" target="_blank">NAT </a><a href="https://wordpress.com" target="_blank">E </a></nobr></span></span></p><p><span style="font-family:Helvetica;font-size:55.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:330.666656px;left:1071.873413px"><nobr>Empowering Youth </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:55.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:437.333344px;left:1122.473267px"><nobr>Enabling Leaders </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:20.000000px;font-weight:bold;color:#3DB5FF;"><span style="position:absolute;top:216.000000px;left:688.733276px"><nobr><a href="#" onclick="gotoPage(0)">A </a><a href="#" onclick="gotoPage(0)">BO </a><a href="#" onclick="gotoPage(0)">UT </a><a href="#" onclick="gotoPage(0)">US </a><a href="#" onclick="gotoPage(0)">K </a><a href="#" onclick="gotoPage(0)">C </a><a href="#" onclick="gotoPage(0)">AM </a><a href="#" onclick="gotoPage(0)">P </a><a href="#" onclick="gotoPage(0)">S </a><a href="#" onclick="gotoPage(0)">VOLU </a><a href="#" onclick="gotoPage(0)">N </a><a href="#" onclick="gotoPage(0)">T </a><a href="#" onclick="gotoPage(0)">EE </a><a href="#" onclick="gotoPage(0)">R </a><a href="#" onclick="gotoPage(0)">B </a><a href="#" onclick="gotoPage(0)">LOG </a></nobr></span></span></p><p><span style="font-family:Helvetica;font-size:28.000000px;font-weight:bold;color:#3DB5FF;"><span style="position:absolute;top:1277.333374px;left:827.959961px"><nobr>A B OU T US </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:40.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:1874.666626px;left:149.333328px"><nobr>We d r ive hom e on e si ng le mes s age : </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:40.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:1968.000000px;left:149.333328px"><nobr>C o llab orat i ve C re a t io n is M ult ip li ca t io n </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:55.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:3293.333252px;left:786.666687px"><nobr>Values that </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:55.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:3386.666748px;left:786.666687px"><nobr>guide us </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:28.000000px;font-weight:bold;color:#3DB5FF;"><span style="position:absolute;top:4301.333496px;left:843.248047px"><nobr>K CA M PS </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:20.000000px;font-weight:bold;color:#FFFFFF;"><span style="position:absolute;top:5268.666504px;left:1364.933350px"><nobr><a href="https://wordpress.com" target="_blank">RE </a><a href="https://wordpress.com" target="_blank">A </a><a href="https://wordpress.com" target="_blank">D </a><a href="https://wordpress.com" target="_blank">MO </a><a href="https://wordpress.com" target="_blank">RE </a></nobr></span></span></p><p><span style="font-family:Helvetica;font-size:28.000000px;font-weight:bold;color:#3DB5FF;"><span style="position:absolute;top:5459.333496px;left:809.405396px"><nobr>VO LU NT E ER </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:20.000000px;font-weight:bold;color:#FFFFFF;"><span style="position:absolute;top:5842.000000px;left:1439.266602px"><nobr><a href="https://wordpress.com" target="_blank">A </a><a href="https://wordpress.com" target="_blank">P </a><a href="https://wordpress.com" target="_blank">PLY </a><a href="https://wordpress.com" target="_blank">NOW </a></nobr></span></span></p><p><span style="font-family:Helvetica;font-size:28.000000px;font-weight:bold;color:#3DB5FF;"><span style="position:absolute;top:6033.333496px;left:664.944031px"><nobr><a href="#" onclick="gotoPage(0)">STO </a><a href="#" onclick="gotoPage(0)">RI </a><a href="#" onclick="gotoPage(0)">E </a><a href="#" onclick="gotoPage(0)">S </a><a href="#" onclick="gotoPage(0)">F </a><a href="#" onclick="gotoPage(0)">ROM </a><a href="#" onclick="gotoPage(0)">TH </a><a href="#" onclick="gotoPage(0)">E </a><a href="#" onclick="gotoPage(0)">F </a><a href="#" onclick="gotoPage(0)">I </a><a href="#" onclick="gotoPage(0)">EL </a><a href="#" onclick="gotoPage(0)">D </a></nobr></span></span></p><p><span style="font-family:Helvetica;font-size:55.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:3702.666748px;left:153.333328px"><nobr>Our work pans </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:55.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:3796.000000px;left:153.333328px"><nobr>over these </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:55.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:3889.333252px;left:153.333328px"><nobr>Sustainable </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:55.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:3982.666748px;left:153.333328px"><nobr>Development </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:55.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:4076.000000px;left:153.333328px"><nobr>Goals </nobr></span></span></p><p><span style="font-family:PT Sans;font-size:18.000000px;font-style:normal;font-weight:normal;color:#FFFFFF;"><span style="position:absolute;top:7534.141602px;left:688.000000px"><nobr>Privacy &amp; Terms </nobr></span></span></p><p><span style="font-family:PT Sans;font-size:20.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:7218.186035px;left:1478.853271px"><nobr>Get in touch: </nobr></span></span></p><p><span style="font-family:PT Sans;font-size:20.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:7262.186035px;left:1467.919922px"><nobr><a href="https://wordpress.com" target="_blank">Contact </a><a href="https://wordpress.com" target="_blank">Line </a><a href="https://wordpress.com" target="_blank">1 </a></nobr></span></span></p><p><span style="font-family:PT Sans;font-size:20.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:7307.519043px;left:1467.919922px"><nobr><a href="https://wordpress.com" target="_blank">Contact </a><a href="https://wordpress.com" target="_blank">Line </a><a href="https://wordpress.com" target="_blank">2 </a></nobr></span></span></p><p><span style="font-family:PT Sans;font-size:20.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:7352.852539px;left:1467.919922px"><nobr><a href="https://wordpress.com" target="_blank">Contact </a><a href="https://wordpress.com" target="_blank">Line </a><a href="https://wordpress.com" target="_blank">3 </a></nobr></span></span></p><p><span style="font-family:PT Sans;font-size:20.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:7424.852539px;left:1347.013306px"><nobr><a href="contact@karunachal.org" target="_blank">contact@karunachal.org </a></nobr></span></span></p><p><span style="font-family:PT Sans;font-size:20.000000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:7458.185547px;left:1440.746704px"><nobr>+91-9912345678 </nobr></span></span></p><p><span style="font-family:PT Sans;font-size:18.000000px;font-style:normal;font-weight:normal;color:#FFFFFF;"><span style="position:absolute;top:7534.141602px;left:154.133331px"><nobr>© 2019 Karunachal India, All Rights Reserved </nobr></span></span></p><p><span style="font-family:Helvetica;font-size:20.000000px;font-weight:bold;color:#FFFFFF;"><span style="position:absolute;top:2125.333252px;left:1319.253418px"><nobr><a href="https://wordpress.com" target="_blank">M </a><a href="https://wordpress.com" target="_blank">E </a><a href="https://wordpress.com" target="_blank">ET </a><a href="https://wordpress.com" target="_blank">O </a><a href="https://wordpress.com" target="_blank">UR </a><a href="https://wordpress.com" target="_blank">T </a><a href="https://wordpress.com" target="_blank">E </a><a href="https://wordpress.com" target="_blank">A </a><a href="https://wordpress.com" target="_blank">M </a></nobr></span></span></p>']
+            }
+        },
+        mounted: function() {
+            this.$nextTick(function() {
+                this.pageNum = this.pageDatas.length;
+                this.pageContent = this.pageDatas[0];
+
+                this.setLeftMenuHeight();
+            })
+        },
+        watch: {
+            'currentPage': function(newVal, oldValue) {
+                // console.log('newVal ' + newVal, 'oldValue ' + oldValue);
+                if (newVal) {
+                    this.pageContent = this.pageDatas[this.currentPage - 1];
+                }
+            },
+            'zoomNum': function(newVal, oldValue) {
+                if (newVal) {
+                    this.zoomStyle = {
+                        'transform': 'scale(' + newVal + ')',
+                        '-webkit-transform': 'scale(' + newVal + ')',
+                        '-ms-transform': 'scale(' + newVal + ')',
+                        '-moz-transform': 'scale(' + newVal + ')',
+                        '-o-transform': 'scale(' + newVal + ')'
+                    }
+                }
+            }
+        },
+        methods: {
+            
+            changeCurrentPage: function(methods) {
+                switch (methods) {
+                    case 'first':
+                        this.currentPage = 1;
+                        break;
+                    case 'prev':
+                        if (this.currentPage > 1) {
+                            this.currentPage -= 1;
+                        }
+                        break;
+                    case 'next':
+                        if (this.currentPage < this.pageNum) {
+                            this.currentPage += 1;
+                        }
+                        break;
+                    case 'last':
+                        this.currentPage = this.pageNum;
+                        break;
+                }
+            },
+
+            gotoPage: function(page) {
+                console.log(page);
+                this.currentPage = page;
+            },
+            modifyZoom: function(type) {
+                switch (type) {
+                    case 'in':
+                        if (this.zoomNum < 2) {
+                            // this.zoomNum = (this.zoomNum + 0.1).toFixed(1);
+                            this.zoomNum = (parseFloat(this.zoomNum) + 0.1).toFixed(1);
+                        }
+                        break;
+                    case 'out':
+                        if (this.zoomNum > 0.5) {
+                            this.zoomNum = (parseFloat(this.zoomNum) - 0.1).toFixed(1);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                console.log(this.zoomNum);
+            },
+            setLeftMenuHeight: function() {
+                // this.asideHeight = document.body.scrollHeight - 60;
+                this.mainHeight = document.documentElement.clientHeight - 60 - 20;
+                // 60为头部导航高度， 46为menu高度， 40为上下padding
+                this.asideHeight = this.mainHeight - 20 - 46;
+            },
+            changePage: function(page) {
+                this.currentPage = page;
+                // this.pageContent = this.pageDatas[page - 1];
+            },
+            changeLeftMenu: function() {
+                this.ifMenuShow = !this.ifMenuShow;
+            }
+        }
+    });
+
+function gotoPage(page) {
+    console.log(page);
+    app.gotoPage(page);
+}
+
+</script>
+
+</html>
